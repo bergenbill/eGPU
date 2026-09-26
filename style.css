@@ -409,8 +409,7 @@ h1.title {
   color: #b2a48e;
   font-style: italic;
 }
-.task.char .txt::after {
-  content: attr(data-char);
+.chtag {
   font-size: 10px;
   background: #e8dcc0;
   border-radius: 6px;
@@ -419,22 +418,21 @@ h1.title {
   vertical-align: 1px;
 }
 .hanko {
-  position: absolute;
-  left: -6px;
-  top: -5px;
-  width: 30px;
-  height: 30px;
-  border: 2.5px solid var(--red);
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  margin: -3px -3px 0 -3px;
+  border: 2px solid var(--red);
   border-radius: 50%;
   color: var(--red);
   font-family: var(--brush);
-  font-size: 15px;
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   transform: rotate(-14deg);
-  background: rgba(255, 240, 230, 0.4);
-  opacity: 0.88;
+  background: rgba(255, 240, 230, 0.5);
+  opacity: 0.9;
 }
 .hanko.anim {
   animation: stampIn 0.5s cubic-bezier(0.2, 1.8, 0.4, 1);
@@ -704,6 +702,17 @@ h1.title {
   display: block;
   font-size: 13px;
   color: var(--ink);
+}
+.floater.barkfx {
+  font-family: var(--brush);
+  font-size: 30px;
+  color: #3a2c22;
+  transform: translate(-50%, -50%) rotate(-8deg);
+}
+.floater.barkfx small {
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--red);
 }
 .floater.combo {
   font-size: 24px;

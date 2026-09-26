@@ -79,6 +79,8 @@ check('ring bell', r.done, JSON.stringify(r));
 // 4. fish stash
 r = await page.evaluate(() => {
   const g = window.__game;
+  const fmv = g.npcById('fishmonger');
+  fmv.setMode('routine'); fmv.stepI = 3; fmv.stepPhase = 'go'; fmv.pos.set(-3, 0, -20.9);
   const f = g.items.items.find((i) => i.type === 'fish');
   T.tp(f.pos.x + 1.35, f.pos.z, -Math.PI / 2);
   T.step(0.1);

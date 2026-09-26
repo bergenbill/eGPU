@@ -756,8 +756,9 @@ export class Player {
     const range = c.throwRange * (it.weight === 'medium' ? 0.55 : 1);
     const hand = new THREE.Vector3();
     this.model.hand.getWorldPosition(hand);
-    let dx = this.aimPoint.x - this.pos.x;
-    let dz = this.aimPoint.z - this.pos.z;
+    const aim = this.assistedAim();
+    let dx = aim.x - this.pos.x;
+    let dz = aim.z - this.pos.z;
     let d = Math.hypot(dx, dz);
     if (d < 0.5) {
       dx = Math.sin(this.yaw);
@@ -769,7 +770,7 @@ export class Player {
     }
     this.yaw = Math.atan2(dx, dz);
     d = Math.min(d, range);
-    const vel = this.computeThrowVel(hand, dx, dz, d, this.aimPoint.y, range);
+    const vel = this.computeThrowVel(hand, dx, dz, d, aim.y, range);
     this.held = null;
     g.items.throwItem(it, vel, 'player');
     it.pos.copy(hand);
@@ -781,9 +782,31 @@ export class Player {
     this.aiming = false;
   }
 
+  // Friendly aim assist: aiming close to someone snaps to them and leads their movement.
+  assistedAim() {
+    const g = this.g;
+    const ap = this.aimPoint;
+    let best = null;
+    let bd = 1.8;
+    for (const n of g.npcs) {
+      if (!n.active) continue;
+      const d = Math.hypot(n.pos.x - ap.x, n.pos.z - ap.z);
+      if (d < bd) {
+        bd = d;
+        best = n;
+      }
+    }
+    if (!best) return { x: ap.x, y: ap.y, z: ap.z, npc: null };
+    const dist = Math.hypot(best.pos.x - this.pos.x, best.pos.z - this.pos.z);
+    const t = Math.min(1.5, dist / 9 + 0.15);
+    return { x: best.pos.x + best.vel.x * t, y: best.pos.y, z: best.pos.z + best.vel.z * t, npc: best };
+  }
+
   computeThrowVel(from, dx, dz, d, ty, range) {
-    const th = this.c.throwAngle;
     const dy = (ty || 0) - from.y;
+    // from up high, throw flatter and faster (pelting rather than lobbing)
+    const drop = -dy;
+    const th = drop > 1.2 ? Math.max(0.12, this.c.throwAngle - Math.min(0.5, drop * 0.12)) : this.c.throwAngle;
     const cos = Math.cos(th);
     const tan = Math.tan(th);
     let v2 = (GRAV * d * d) / (2 * cos * cos * Math.max(0.05, d * tan - dy));
@@ -799,14 +822,16 @@ export class Player {
     const range = this.c.throwRange * (it.weight === 'medium' ? 0.55 : 1);
     const hand = new THREE.Vector3();
     this.model.hand.getWorldPosition(hand);
-    let dx = this.aimPoint.x - this.pos.x;
-    let dz = this.aimPoint.z - this.pos.z;
+    const aim = this.assistedAim();
+    let dx = aim.x - this.pos.x;
+    let dz = aim.z - this.pos.z;
     let d = Math.hypot(dx, dz);
     if (d < 0.5) return null;
     dx /= d;
     dz /= d;
+    const full = d;
     d = Math.min(d, range);
-    const v = this.computeThrowVel(hand, dx, dz, d, this.aimPoint.y, range);
+    const v = this.computeThrowVel(hand, dx, dz, d, aim.y, range);
     const pts = [];
     const p = hand.clone();
     const vel = v.clone();
@@ -819,13 +844,14 @@ export class Player {
         break;
       }
     }
-    return { pts, end: pts[pts.length - 1], clamped: Math.hypot(this.aimPoint.x - this.pos.x, this.aimPoint.z - this.pos.z) > range };
+    return { pts, end: pts[pts.length - 1], clamped: full > range, npc: aim.npc };
   }
 
   bark() {
     const g = this.g;
     this.barkCD = 0.55;
     this.a.bark = 1;
+    g.ui.barkText(this.pos, this.c.barkKind === 'hiss' ? 'シャーッ!' : 'キーッ!', this.c.barkKind === 'hiss' ? 'HISSS!' : 'KII-KII!');
     g.audio.bark(this.c.barkKind, this.held ? this.held.type : null, this.pos);
     g.bark(this);
   }

@@ -18,6 +18,7 @@ export class NPC {
     const home = g.poi[def.home];
     this.pos = new THREE.Vector3(home[0], 0, home[1]);
     this.vel = new THREE.Vector3();
+    this.prevPos = this.pos.clone();
     this.yaw = 0;
     this.radius = 0.36;
     this.height = this.model.height;
@@ -644,9 +645,14 @@ export class NPC {
     if (!this.active || this.mode === 'bus') return;
     const facing = angleOff(this.yaw + this.lookYaw, this.pos.x, this.pos.z, p.pos.x, p.pos.z) < this.def.fov;
     const seen = this.canSeePlayer(true);
-    // Raccoon hiss makes people back away
+    // Raccoon hiss makes people back away (but they wise up for a while afterwards)
+    if (p.c.barkKind === 'hiss' && seen && d < radius && this.g.time < (this.hissImmuneUntil || 0)) {
+      if (Math.random() < 0.6) this.say(pick(['Not falling for that again!', 'Hmph, you don\'t scare me.', 'Nice try!']), 1.6);
+      return;
+    }
     if (p.c.barkKind === 'hiss' && seen && d < radius) {
       if (this.mode !== 'bucket') {
+        this.hissImmuneUntil = this.g.time + 15;
         this.dropHeld(true);
         this.fearT = 4;
         this.say('Eek! It might bite!', 1.8);
@@ -798,6 +804,15 @@ export class NPC {
     if (p.state === 'caught') {
       this.setMode('routine');
       return [null, 0];
+    }
+    // the bamboo grove hideout is home base: nobody follows you in there
+    if (g.inHideout(p.pos.x, p.pos.z) || dist2d(p.pos.x, p.pos.z, -50.5, 34.5) < 7) {
+      if (dist2d(this.pos.x, this.pos.z, -50.5, 34.5) < 13 || g.inHideout(p.pos.x, p.pos.z)) {
+        this.say(pick(["I'm not going in there...", 'Too many bugs in that bamboo!', 'Hmph. Stay there, then!']), 2.2);
+        this.setMode('giveup', { x: p.pos.x, z: p.pos.z });
+        g.onEscape(this, 'home', c.t);
+        return ['fist', 0];
+      }
     }
     if (p.unreachable && sees) {
       // wait underneath and shake a fist
@@ -1126,6 +1141,13 @@ export class NPC {
   syncModel(dt) {
     const m = this.model;
     const p = this.pose;
+    if (dt > 0) {
+      this.vel.x = this.vel.x * 0.7 + ((this.pos.x - this.prevPos.x) / dt) * 0.3;
+      this.vel.z = this.vel.z * 0.7 + ((this.pos.z - this.prevPos.z) / dt) * 0.3;
+      const sp = Math.hypot(this.vel.x, this.vel.z);
+      if (sp > 7) this.vel.multiplyScalar(7 / sp); // ignore teleports / seat snaps
+      this.prevPos.copy(this.pos);
+    }
     const target = p.targetSpeed || 0;
     p.speed = damp(p.speed, target / 2, 10, dt);
     p.run = damp(p.run, target > 3 ? 1 : 0, 8, dt);

@@ -50,7 +50,7 @@ export const TASKS = {
   },
   poopStep: {
     title: "Make someone step in your 'little present'",
-    hint: "When nature calls (watch the leaf meter), press X on a path someone walks along every day. Eating snacks makes nature call sooner.",
+    hint: "When nature calls (watch the 🍃 meter), press X right where someone stands or walks every day — like the fishmonger's shouting spot or the priest's sweeping spot. Eating snacks makes nature call sooner.",
     points: 300, on: ['stepPoop'], test: () => true,
   },
   soakLaundry: {

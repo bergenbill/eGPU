@@ -187,11 +187,12 @@ export class Game {
 
   quitToTitle() {
     this.paused = false;
+    this.controlsEnabled = false;
     this.ui.fade(true);
-    this.after(0.45, () => {
+    setTimeout(() => {
       this.titleWorld();
       this.ui.fade(false);
-    });
+    }, 450);
   }
 
   // ------------------------------------------------------------------ start a day
@@ -267,6 +268,26 @@ export class Game {
     });
     this.events.on('poop', () => {
       s.stats.poops++;
+    });
+    // Taking the Golden Lucky Cat sets the whole town off
+    this.events.on('pickup', (e) => {
+      if (e.item.type !== 'goldCat') return;
+      const p = this.player;
+      this.heat = Math.max(this.heat, 2.2);
+      this.lastMischief = { x: p.pos.x, z: p.pos.z, t: this.time };
+      this.ui.bigText('THE LUCKY CAT!', 'Everybody heard that...');
+      this.rig.shake = 0.6;
+      for (const n of this.npcs) {
+        if (!n.active) continue;
+        const d = dist2d(n.pos.x, n.pos.z, p.pos.x, p.pos.z);
+        if (d < 32) {
+          n.awareness = Math.max(n.awareness, 0.9);
+          n.sleeping = false;
+          if (n.mode === 'routine' || n.mode === 'watch') n.interrupt('investigate', { x: p.pos.x, z: p.pos.z, run: true, dur: 2 });
+        }
+      }
+      const dg = this.npcById('dango');
+      if (dg) dg.say('thief', 3);
     });
   }
 
@@ -467,7 +488,7 @@ export class Game {
     if (!this.player || this.player.state === 'caught') return;
     if (chaseT < 1.5) return;
     this.sessionStats.escapes++;
-    this.score.add(80, how === 'up' ? 'Out of reach!' : how === 'hid' ? 'Vanished!' : 'Getaway!', this.player.pos, 'escape:' + npc.id);
+    this.score.add(80, how === 'up' ? 'Out of reach!' : how === 'hid' ? 'Vanished!' : how === 'home' ? 'Home free!' : 'Getaway!', this.player.pos, 'escape:' + npc.id);
     this.audio.sfx('escape', null, 1);
     this.music.stinger('escape');
     this.events.emit('escape', { npc, how });
@@ -766,7 +787,9 @@ export class Game {
         line.visible = true;
         this.aimRing.visible = true;
         this.aimRing.position.set(arc.end.x, Math.max(0.05, arc.end.y + 0.03), arc.end.z);
-        this.aimRing.material.color.set(arc.clamped ? '#e8b53a' : '#c9412f');
+        this.aimRing.material.color.set(arc.npc ? '#ff3b1f' : arc.clamped ? '#e8b53a' : '#c9412f');
+        const sc = arc.npc ? 1.5 + Math.sin(this.time * 12) * 0.15 : 1;
+        this.aimRing.scale.set(sc, sc, sc);
       }
     } else {
       line.visible = false;

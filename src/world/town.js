@@ -641,11 +641,23 @@ export function buildTown(g, pal, rng) {
     const w = W.addWater({ kind: 'box', minX: x0, maxX: x1, minZ: z0, maxZ: z1, type: 'paddy', name: 'rice paddy' });
     P.waterMesh(T, w, '#86b3ad', 0.78);
     if (!pal.snow) {
-      for (let x = x0 + 0.8; x < x1 - 0.4; x += 1.1) {
-        for (let z = z0 + 0.8; z < z1 - 0.4; z += 1.1) {
-          const sprout = cone(0.12, 0.45, pal.id === 'autumn' ? '#d8b44a' : '#7fb84f', { x, y: 0.25, z, seg: 3 });
-          sprout.castShadow = false;
-          T.add(sprout);
+      // rows of rice plants: green in spring/summer, golden & drooping in autumn
+      const ripe = pal.id === 'autumn';
+      const blade = ripe ? '#d6b04a' : pal.id === 'spring' ? '#8cc45a' : '#6fae4a';
+      for (let x = x0 + 0.8; x < x1 - 0.4; x += 1.0) {
+        for (let z = z0 + 0.7; z < z1 - 0.4; z += 0.8) {
+          const tuft = group({ x: x + T.rng.range(-0.08, 0.08), z, ry: T.rng.range(0, 3) });
+          for (let k = 0; k < 3; k++) {
+            const b = box(0.04, 0.5, 0.1, blade, { y: 0.28, rz: (k - 1) * 0.35, rx: T.rng.range(-0.15, 0.15) });
+            b.castShadow = false;
+            tuft.add(b);
+          }
+          if (ripe) {
+            const head = box(0.07, 0.07, 0.22, '#e8c35a', { y: 0.5, z: 0.08, rx: 0.6 });
+            head.castShadow = false;
+            tuft.add(head);
+          }
+          T.add(tuft);
         }
       }
     }
@@ -662,10 +674,11 @@ export function buildTown(g, pal, rng) {
   poi.hideout = [-50.5, 34.5];
   T.fixture('stash', { x: -50.5, z: 34.5, r: 2.4 });
   T.fixture('drain', { x: -46.2, z: 30.2, name: 'Hideout', key: 'hideout' });
-  for (let i = 0; i < 70; i++) {
+  for (let i = 0; i < 90; i++) {
     const x = T.rng.range(-59.5, -42);
     const z = T.rng.range(26, 43.5);
-    if (Math.hypot(x + 50.5, z - 34.5) < 4.2) continue;
+    // keep the grove open in front of the camera (south) so the hideout stays visible
+    if (x > -55.5 && z > 28.5) continue;
     if (x > -49.8 && x < -46 && z < 34) continue;
     if (Math.hypot(x + 46.2, z - 30.2) < 1.2) continue;
     const h = T.rng.range(5, 8);

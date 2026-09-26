@@ -292,8 +292,8 @@ export class UI {
       }
       const pr = tm.progress(id);
       const cnt = pr && !done ? `<span class="cnt" id="cnt-${id}">${pr.n}/${pr.of}</span>` : '';
-      const ch = t.char ? ` char" data-char="${t.char === 'monkey' ? 'Kiki' : 'Doro'}` : '';
-      html += `<div class="task ${done ? 'done' : ''}${ch}" id="task-${id}">${done ? '<span class="hanko">済</span>' : '<span class="box"></span>'}<div class="txt">${esc(t.title)}${cnt}${id === FINALE ? ' ★' : ''}<div class="h">💡 ${esc(t.hint)}</div></div></div>`;
+      const tag = t.char ? `<span class="chtag">${t.char === 'monkey' ? 'Kiki' : 'Doro'}</span>` : '';
+      html += `<div class="task ${done ? 'done' : ''}" id="task-${id}">${done ? '<span class="hanko">済</span>' : '<span class="box"></span>'}<div class="txt">${esc(t.title)}${tag}${cnt}${id === FINALE ? ' ★' : ''}<div class="h">💡 ${esc(t.hint)}</div></div></div>`;
     }
     if (g.mode === 'story') {
       html += `<div class="foot">${c.id === 'main' ? 'Stamp 9 tasks to reveal the final one. ' : 'Optional extras — just for bragging rights. '}Click a task for a hint.</div>`;
@@ -360,18 +360,26 @@ export class UI {
   taskProgress(id, n, of) {
     const el = $('cnt-' + id);
     if (el) el.textContent = `${n}/${of}`;
-    this.toast(`${TASKS[id].title}: ${n}/${of}`, 'info');
+    if (n < of) this.toast(`${TASKS[id].title}: ${n}/${of}`, 'info', 2600, 'prog-' + id);
   }
 
-  toast(msg, type = 'info', dur = 3200) {
-    const el = document.createElement('div');
+  toast(msg, type = 'info', dur = 3200, key = null) {
+    const box = $('toasts');
+    let el = key ? box.querySelector(`[data-key="${key}"]`) : null;
+    if (el) {
+      clearTimeout(el._t1);
+      clearTimeout(el._t2);
+      el.classList.remove('out');
+    } else {
+      el = document.createElement('div');
+      if (key) el.dataset.key = key;
+      box.appendChild(el);
+    }
     el.className = 'toast ' + type;
     el.textContent = msg;
-    const box = $('toasts');
-    box.appendChild(el);
     while (box.children.length > 4) box.removeChild(box.firstChild);
-    setTimeout(() => el.classList.add('out'), dur);
-    setTimeout(() => el.remove(), dur + 450);
+    el._t1 = setTimeout(() => el.classList.add('out'), dur);
+    el._t2 = setTimeout(() => el.remove(), dur + 450);
   }
 
   bigText(text, sub, stamp) {
@@ -391,6 +399,14 @@ export class UI {
     el.innerHTML = `${esc(text)}${combo > 1 ? ` <span style="font-size:15px">×${Math.min(4, 1 + (combo - 1) * 0.25)}</span>` : ''}<small>${esc(label || '')}</small>`;
     $('world').appendChild(el);
     this.floaters.push({ el, pos: { x: pos.x, y: (pos.y || 0) + 1.2, z: pos.z }, t: 0 });
+  }
+
+  barkText(pos, jp, en) {
+    const el = document.createElement('div');
+    el.className = 'floater barkfx';
+    el.innerHTML = `${esc(jp)}<small>${esc(en)}</small>`;
+    $('world').appendChild(el);
+    this.floaters.push({ el, pos: { x: pos.x + 0.3, y: pos.y + 0.6, z: pos.z }, t: 0.6 });
   }
 
   fortune(f) {

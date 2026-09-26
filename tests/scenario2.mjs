@@ -50,7 +50,7 @@ r = await page.evaluate(() => {
   T.tap('Space');
   T.step(1.5);
   const s1 = p.state;
-  const it = g.items.items.find((i) => i.type === 'persimmon' && i.state === 'rest');
+  const it = g.items.items.find((i) => i.type === 'persimmon' && i.state === 'rest' && Math.hypot(i.pos.x + 49, i.pos.z + 27) < 6);
   T.tp(it.pos.x + 0.6, it.pos.z, -Math.PI / 2);
   T.tap('KeyE');
   const held = p.held && p.held.type;
@@ -60,8 +60,9 @@ r = await page.evaluate(() => {
   T.step(2.0);
   const s2 = p.state;
   const f = g.npcById('farmer');
-  f.setMode('routine');
+  f.setMode('watch');
   f.pos.set(-44, 0, -24);
+  f.prevPos.copy(f.pos); f.vel.set(0, 0, 0);
   g.player.aimPoint.set(-44, 0, -24);
   const arc = p.throwArc();
   p.throwHeld();
@@ -163,6 +164,7 @@ r = await page.evaluate(() => {
   const cup = g.items.items.find((i) => i.type === 'teaCup');
   const f = g.npcById('farmer');
   for (const n of g.npcs) n.setMode('routine');
+  f.wariness = 0; f.stepI = 8; f.stepPhase = 'go';
   cup.pos.set(-48, 0, -14);
   cup.state = 'rest';
   cup.mesh.position.copy(cup.pos);
@@ -253,7 +255,8 @@ r = await page.evaluate(() => {
   const p = g.player;
   // drag golden cat
   const cat = g.items.items.find((i) => i.type === 'goldCat');
-  for (const n of g.npcs) n.setMode('routine');
+  for (const n of g.npcs) { n.setMode('routine'); n.pos.set(n.pos.x, 0, n.pos.z); }
+  g.npcs.forEach((n, i) => n.pos.set(40 + i, 0, 25));
   T.tp(cat.pos.x + 1.1, cat.pos.z, -Math.PI / 2);
   T.step(0.1);
   const lab = p.focusInfo && p.focusInfo.label;

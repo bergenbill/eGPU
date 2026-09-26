@@ -622,17 +622,34 @@ class Stash extends Fixture {
     super(g, spec);
     this.r = spec.r;
     const m = group();
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(spec.r, 0.3, 5, 18), mat('#a88a5a'));
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(spec.r, 0.32, 5, 20), mat('#d2b06a'));
     ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.12;
+    ring.position.y = 0.14;
     ring.castShadow = true;
     ring.receiveShadow = true;
     m.add(ring);
-    m.add(cyl(spec.r, spec.r, 0.05, '#8a7048', { y: 0.03, seg: 18 }));
-    for (let i = 0; i < 16; i++) {
-      const a = (i / 16) * Math.PI * 2;
-      m.add(cyl(0.03, 0.03, 0.9, '#6b4a36', { x: Math.cos(a) * spec.r, y: 0.2, z: Math.sin(a) * spec.r, rz: Math.cos(a + 1) * 1.2, rx: Math.sin(a) * 1.2, seg: 4 }));
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(spec.r + 0.15, 0.18, 4, 20), mat('#b8944f'));
+    ring2.rotation.x = Math.PI / 2;
+    ring2.position.y = 0.3;
+    m.add(ring2);
+    m.add(cyl(spec.r, spec.r, 0.06, '#c9a86a', { y: 0.03, seg: 20 }));
+    // soft bed of leaves & straw
+    const bedCols = ['#e0c07a', '#d9a441', '#c96a3a', '#b8944f', '#e8d39a'];
+    for (let i = 0; i < 40; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const r = Math.sqrt(Math.random()) * (spec.r - 0.3);
+      m.add(box(0.28, 0.03, 0.12, bedCols[i % bedCols.length], { x: Math.cos(a) * r, y: 0.07 + Math.random() * 0.03, z: Math.sin(a) * r, ry: Math.random() * 3 }));
     }
+    for (let i = 0; i < 22; i++) {
+      const a = (i / 22) * Math.PI * 2;
+      m.add(cyl(0.025, 0.025, 1.0, '#8a6a44', { x: Math.cos(a) * (spec.r + 0.1), y: 0.28, z: Math.sin(a) * (spec.r + 0.1), rz: Math.cos(a + 1) * 1.25, rx: Math.sin(a) * 1.25, seg: 4 }));
+    }
+    // hollow log to sleep in
+    const log = group({ x: -spec.r - 0.9, z: 0.6, ry: 0.5 });
+    log.add(cyl(0.55, 0.55, 2.0, '#7a5a3c', { y: 0.55, rz: Math.PI / 2, seg: 10 }));
+    log.add(cyl(0.4, 0.4, 2.02, '#3a2a1c', { y: 0.55, rz: Math.PI / 2, seg: 10 }));
+    log.add(sphere(0.25, '#6f9a4a', { x: 0.3, y: 1.05, sy: 0.4, lo: true }));
+    m.add(log);
     const sign = group({ x: spec.r + 0.8, z: -0.5, ry: -0.4 });
     sign.add(box(0.08, 1.1, 0.08, C.woodDark, { y: 0.55 }));
     sign.add(box(0.8, 0.45, 0.06, C.woodLight, { y: 1.05 }));
@@ -1078,12 +1095,6 @@ export class Poop extends Fixture {
     if (!this.squished && Math.random() < dt * 1.2) g.particles.stink(this.x, this.pos.y + 0.25, this.z);
     if (this.life <= 0) g.removePoop(this);
   }
-  needsTidy(npc) {
-    return !this.squished && (npc.id === 'priest' || npc.id === 'grandma' || npc.id === 'dango');
-  }
-  tidy() {
-    this.g.removePoop(this);
-  }
 }
 
 // ---------------------------------------------------------------------------- the bus
@@ -1116,6 +1127,8 @@ export class Bus extends Fixture {
     this.honkT = 0;
     this.carrying = null;
     this.trips = 0;
+    this.blockT = 0;
+    this.noBoard = false;
   }
   setCol() {
     this.col.minX = this.x - 4.3;
@@ -1189,17 +1202,22 @@ export class Bus extends Fixture {
     if (this.state === 'arriving' || this.state === 'leaving') {
       const b = this.blocked();
       if (b) {
-        target = 0;
+        this.blockT += dt;
+        // townsfolk get out of the way after a honk or two; the player can hold it up longer
+        if (b !== 'player' && this.blockT > 2.5) {
+          target = 1.5;
+          const away = b.pos.z > this.z ? 1 : -1;
+          b.pos.z = this.z + away * 1.9;
+        } else target = 0;
         if (this.honkT <= 0) {
           this.honkT = 1.6;
           g.audio.sfx('busHorn', { x: this.x, y: 0, z: this.z }, 1);
-          g.noise(this.x, this.z, 10, 'clatter', this);
           if (b === 'player') {
             g.events.emit('busBlocked', {});
             g.mischief('busBlock', { x: this.x - 5, y: 0, z: this.z }, { points: 60, label: 'Traffic jam!', silent: true });
-          }
+          } else if (b.say) b.say(pick(['Sorry, sorry!', 'Oops!', 'Excuse me!']), 1.5);
         }
-      }
+      } else this.blockT = 0;
     }
     this.speed += (target - this.speed) * Math.min(1, dt * 1.5);
     this.x -= this.speed * dt;
@@ -1221,7 +1239,7 @@ export class Bus extends Fixture {
   board() {
     const g = this.g;
     const s = g.npcById('salary');
-    if (!s || !s.active || this.carrying) return;
+    if (!s || !s.active || this.carrying || this.noBoard) return;
     // he only hops on if he's free while the doors are opening (first few seconds)
     if (this.t < 3.8) return;
     if (s.mode === 'routine' && dist2d(s.pos.x, s.pos.z, this.stopX - 3, 3.4) < 8) {
@@ -1243,6 +1261,10 @@ export class Bus extends Fixture {
   depart() {
     const g = this.g;
     const s = g.npcById('salary');
+    if (this.noBoard) {
+      this.noBoard = false;
+      return;
+    }
     if (s && !this.carrying && s.active && s.mode !== 'bus') {
       s.say('missed', 3);
       s.interrupt('giveup', { x: this.x, z: this.z });
@@ -1260,7 +1282,9 @@ export class Bus extends Fixture {
       s.model.root.visible = true;
       s.pos.set(this.stopX - 3, 0, 3.2);
       s.setMode('routine');
-      s.say('Forgot my umbrella again...', 2.5);
+      s.stepI = 0;
+      s.say(pick(['Forgot my briefcase again...', 'Wrong bus. Again.', 'Meeting cancelled!']), 2.5);
+      this.noBoard = true;
     }
   }
 }
