@@ -251,12 +251,32 @@ export class UI {
         this.buildSettings();
       });
     }
-    $('resetSave').addEventListener('click', () => {
-      if (window.confirm('Really erase all stamps, scores, hats and collection?')) {
+    const rb = $('resetSave');
+    rb.addEventListener('click', () => {
+      if (rb.dataset.armed) {
         g.resetProgress();
         this.buildSettings();
+        this.toastTitle('All progress erased. A fresh start!');
+        return;
       }
+      rb.dataset.armed = '1';
+      rb.textContent = 'Click again to erase everything';
+      rb.classList.add('primary');
+      setTimeout(() => {
+        if (!rb.isConnected) return;
+        delete rb.dataset.armed;
+        rb.textContent = 'Reset all progress';
+        rb.classList.remove('primary');
+      }, 4000);
     });
+  }
+
+  toastTitle(msg) {
+    const el = $('settingsBody');
+    const note = document.createElement('div');
+    note.style.cssText = 'font-weight:900;color:var(--green);margin-top:8px';
+    note.textContent = msg;
+    el.appendChild(note);
   }
 
   // ------------------------------------------------------------------ HUD

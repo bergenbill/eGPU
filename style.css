@@ -183,6 +183,7 @@ h1.title {
 }
 .panel.wide {
   width: 880px;
+  overflow-y: auto;
 }
 .panel.scroll {
   overflow-y: auto;
@@ -1078,6 +1079,48 @@ h1.title {
   font-size: 13px;
 }
 
+#deviceNote {
+  display: none;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--red);
+}
+@media (hover: none), (max-width: 700px) {
+  #deviceNote {
+    display: block;
+  }
+}
+@media (max-width: 700px) {
+  #screen-title {
+    padding: 0 16px;
+  }
+  #charCards,
+  .helpgrid {
+    grid-template-columns: 1fr;
+  }
+  .panel {
+    min-width: 0;
+    padding: 16px;
+    overflow-y: auto;
+  }
+  .ctl {
+    grid-template-columns: 110px 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+button:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
 @media (max-width: 900px) {
   #card {
     width: 270px;

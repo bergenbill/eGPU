@@ -134,6 +134,7 @@ export class Game {
   }
 
   disposeWorld() {
+    this.timers = [];
     if (!this.scene) return;
     if (this.player) this.player.dispose();
     this.player = null;
@@ -287,7 +288,7 @@ export class Game {
         }
       }
       const dg = this.npcById('dango');
-      if (dg) dg.say('thief', 3);
+      if (dg) dg.say('My lucky cat!! Somebody stop that thief!', 3);
     });
   }
 
@@ -645,6 +646,15 @@ export class Game {
 
     const p = this.player;
     if (p) p.update(dt);
+    // gentle nudge when nothing has been stamped for a while
+    if (p && this.tasks && this.save.settings.hints && this.controlsEnabled) {
+      const since = this.time - Math.max(this.tasks.lastCompleteT, this.lastNudge || 0);
+      if (since > 150) {
+        this.lastNudge = this.time;
+        const id = this.tasks.activeTasks()[0];
+        if (id) this.ui.toast('Stuck? Press H (or click a task) for a hint.', 'info', 5000);
+      }
+    }
     for (const n of this.npcs) n.update(dt);
     this.items.update(dt);
     // hanging things (lanterns, laundry) get knocked down by thrown items

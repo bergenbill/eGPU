@@ -414,7 +414,7 @@ export function waterMesh(T, shape, color, opacity = 0.82) {
   } else {
     geo = new THREE.CylinderGeometry(1, 1, 0.04, 28);
   }
-  const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color, transparent: true, opacity }));
+  const m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color, transparent: true, opacity, depthWrite: false }));
   if (shape.kind === 'box') m.position.set((shape.minX + shape.maxX) / 2, 0.05, (shape.minZ + shape.maxZ) / 2);
   else {
     m.position.set(shape.x, 0.05, shape.z);

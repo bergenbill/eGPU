@@ -16,7 +16,7 @@ export const NPC_DEFS = [
     voice: 0.8,
     area: 'farm',
     lines: {
-      thief: ['Dorobō! (Thief!)', 'My daikon!', 'Get back here!'],
+      thief: ['Dorobō! (Thief!)', 'My {item}!', 'Get back here!'],
       shoo: ['Shoo! Shoo!', 'Out of my field!'],
       spot: ['Hm? A {animal}?'],
       giveup: ['Kuso... (Darn...)', 'Next time...'],
@@ -82,7 +82,7 @@ export const NPC_DEFS = [
     area: 'shotengai',
     loud: true,
     lines: {
-      thief: ['OI! My fish!', 'Dorobō! Thief!!', 'Come back with that!'],
+      thief: ['OI! My {item}!', 'Dorobō! Thief!!', 'Come back with that!'],
       shoo: ['Scram! No freebies!', 'Go on, get!'],
       spot: ['Eh? A {animal}?!'],
       giveup: ['Tch! Fast little...', 'Grr... next time!'],
@@ -91,9 +91,9 @@ export const NPC_DEFS = [
       happy: ['Irasshaimase~! Fresh fish!'],
     },
     routine: [
-      { at: 'fishmonger', act: 'tidy', dur: [6, 9], face: Math.PI / 2, look: true },
+      { at: 'fishmonger', act: 'tidy', dur: [6, 9], face: Math.PI / 2, look: true, guard: true },
       { at: 'fishShout', act: 'shout', dur: [3, 4], face: Math.PI / 2, hook: 'irasshai' },
-      { at: 'fishmonger', act: 'tidy', dur: [5, 8], face: Math.PI / 2, look: true },
+      { at: 'fishmonger', act: 'tidy', dur: [5, 8], face: Math.PI / 2, look: true, guard: true },
       { at: 'chatFish', act: 'chat', dur: [6, 8], face: 0, look: true },
       { at: 'fishBreak', act: 'stretch', dur: [5, 7], face: Math.PI / 2, look: true },
     ],
@@ -111,7 +111,7 @@ export const NPC_DEFS = [
     voice: 1.2,
     area: 'shotengai',
     lines: {
-      thief: ['My lucky cat!', 'Give that back, you rascal!'],
+      thief: ['Thief! Thief!', 'Give that back, you rascal!', 'Kora! My {item}!'],
       shoo: ['No dango for you!', 'Shoo, shoo!'],
       spot: ['Oh my, a {animal}!'],
       giveup: ['Ara ara...', 'Mou~ (Geez)'],
@@ -122,10 +122,10 @@ export const NPC_DEFS = [
     routine: [
       { at: 'dango', act: 'pickup', dur: [0.6, 0.6], face: Math.PI / 2, grab: 'uchiwa' },
       { at: 'dangoGrill', act: 'fan', dur: [7, 9], face: Math.PI, look: true },
-      { at: 'dango', act: 'tidy', dur: [4, 6], face: Math.PI / 2, put: 'uchiwa', look: true },
+      { at: 'dango', act: 'tidy', dur: [4, 6], face: Math.PI / 2, put: 'uchiwa', look: true, guard: true },
       { at: 'dangoBench', act: 'tidy', dur: [3, 5], face: -Math.PI / 2, look: true },
       { at: 'chatDango', act: 'chat', dur: [6, 8], face: Math.PI, look: true },
-      { at: 'dango', act: 'lookaround', dur: [4, 5], face: Math.PI / 2, look: true },
+      { at: 'dango', act: 'lookaround', dur: [4, 5], face: Math.PI / 2, look: true, guard: true },
     ],
   },
   {
@@ -171,7 +171,7 @@ export const NPC_DEFS = [
     area: 'grandma',
     vigilant: true,
     lines: {
-      thief: ['My laundry!', 'Kora! Put that down!'],
+      thief: ['My {item}!', 'Kora! Put that down!'],
       shoo: ['Shoo! Go on!', 'Not in my garden!'],
       spot: ['Ara? A {animal}...'],
       giveup: ['Ara ara... my knees.', 'Such a pest!'],
@@ -180,7 +180,7 @@ export const NPC_DEFS = [
       happy: ['What lovely weather.'],
     },
     routine: [
-      { at: 'grandma', act: 'drink', dur: [10, 14], seated: true, face: 0, prop: 'tea', look: true },
+      { at: 'grandma', act: 'drink', dur: [10, 14], seated: true, face: 0, prop: 'tea', look: true, guard: true },
       { at: 'laundry', act: 'repair', dur: [5, 7], face: Math.PI, look: true, hook: 'laundry' },
       { at: 'futon', act: 'beat', dur: [5, 6], face: Math.PI, prop: 'beater', hook: 'futonBeat' },
       { at: 'bonsai', act: 'tidy', dur: [4, 5], face: Math.PI, look: true },
@@ -201,7 +201,7 @@ export const NPC_DEFS = [
     voice: 0.9,
     area: 'busstop',
     lines: {
-      thief: ['My briefcase! The reports!', 'Hey! Give that back!'],
+      thief: ['My {item}! The reports!', 'Hey! Give that back!'],
       shoo: ['Not today, please.', 'Shoo, I have a meeting...'],
       spot: ['Is that a {animal}?'],
       giveup: ["I'm going to be late...", 'Haa... (sigh)'],
@@ -211,7 +211,7 @@ export const NPC_DEFS = [
       missed: ['MATTE!! (WAIT!!)', 'My bus!!'],
     },
     routine: [
-      { at: 'salaryBench', seat: [14.3, 5.75], act: 'read', dur: [11, 14], seated: true, face: Math.PI, grab: 'newspaper', put: 'newspaper', look: false },
+      { at: 'salaryBench', seat: [14.3, 5.75], act: 'read', dur: [11, 14], seated: true, face: Math.PI, grab: 'newspaper', put: 'newspaper', look: false, guard: true },
       { at: 'salaryStop', act: 'lookaround', dur: [4, 5], face: Math.PI / 2, look: true },
       { at: 'salaryPhone', act: 'phone', dur: [7, 9], face: Math.PI, prop: 'phone', look: false, hook: 'phone' },
       { at: 'salaryVend', act: 'tidy', dur: [2.5, 3], face: 0, hook: 'buyCoffee' },
@@ -242,7 +242,7 @@ export const NPC_DEFS = [
       caught: ['Gotcha! Back to the woods with you!'],
     },
     routine: [
-      { at: 'officer', act: 'lookaround', dur: [8, 11], face: -Math.PI / 2, look: true, prop: 'net' },
+      { at: 'officer', act: 'lookaround', dur: [8, 11], face: -Math.PI / 2, look: true, prop: 'net', guard: true },
       { at: [0, -30], act: 'lookaround', dur: [2, 3], face: 0, look: true, prop: 'net' },
       { at: [-1, -6], act: 'lookaround', dur: [1.5, 2], face: 0, look: true, prop: 'net' },
       { at: [-24, -5.2], act: 'lookaround', dur: [2, 3], face: Math.PI, look: true, prop: 'net' },

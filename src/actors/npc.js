@@ -359,14 +359,30 @@ export class NPC {
         this.pos.z = a[1];
       }
       this.sleeping = false;
-      this.stepI = (this.stepI + 1) % this.def.routine.length;
-      this.stepPhase = 'go';
+      this.advanceStep();
     }
     let act = st.act;
     if (this.sleeping) act = st.bath ? 'bathe' : 'sleep';
     if (act === 'drink' && st.seated) this.pose.seated = true;
     else this.pose.seated = false;
     return [act, 0];
+  }
+
+  // Pick the next routine step. Someone who has been pestered a lot stays on guard
+  // (only doing their "guard" steps) until they calm down again.
+  advanceStep() {
+    const r = this.def.routine;
+    const guarding = this.wariness >= 1.8 && r.some((x) => x.guard);
+    let i = (this.stepI + 1) % r.length;
+    if (guarding) {
+      for (let k = 0; k < r.length && !r[i].guard; k++) i = (i + 1) % r.length;
+      if (!this.guardSaid) {
+        this.guardSaid = true;
+        this.say(pick(["I'd better keep an eye on things...", "Not leaving my post again!", "I'm watching you, little rascal."]), 2.6);
+      }
+    } else this.guardSaid = false;
+    this.stepI = i;
+    this.stepPhase = 'go';
   }
 
   hook(st, phase, dt) {
@@ -590,7 +606,8 @@ export class NPC {
     this.leaveSeat();
     this.sleeping = false;
     this.setIcon('!', 2);
-    this.say(reason === 'thief' ? 'thief' : 'shoo', 2.4);
+    const heldName = p.held ? p.held.name.toLowerCase() : 'things';
+    this.say(reason === 'thief' ? 'thief' : 'shoo', 2.4, { item: heldName });
     if (this.def.officer) g.audio.sfx('whistle', this.pos, 1);
     this.wariness = Math.min(3, this.wariness + 0.5);
     this.chaseCount++;
