@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <title>Momiji Mayhem — a mischievous monkey & raccoon game</title>
+    <meta name="description" content="A slapstick stealth-sandbox about a mischievous monkey and a raccoon loose in a small Japanese town. An homage to Untitled Goose Game." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@700&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍁</text></svg>" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <div id="ui">
+      <div id="hud" class="hidden">
+        <div id="card" class="paper"></div>
+        <div id="topright">
+          <div id="scorebox" class="paper">
+            <div class="lbl">MISCHIEF</div>
+            <div id="scoreVal">0</div>
+            <div id="combo"></div>
+          </div>
+          <div id="clockbox" class="paper">
+            <div id="clock">8:00 AM</div>
+            <div id="timer"></div>
+          </div>
+          <div id="heatbox" class="paper" title="Town alert: the more people see you misbehave, the warier everyone gets">
+            <div class="lbl">TOWN ALERT</div>
+            <div id="heat"><span class="paw"></span><span class="paw"></span><span class="paw"></span></div>
+            <div id="heatLabel">Calm</div>
+          </div>
+          <div id="chasers"></div>
+        </div>
+        <div id="mapwrap" class="paper"><canvas id="minimap" width="240" height="212"></canvas><div id="zoneName"></div></div>
+        <div id="bottomleft">
+          <div id="naturebox" class="paper">
+            <div id="natureIcon">🍃</div>
+            <div id="natureBar"><div id="natureFill"></div></div>
+          </div>
+          <div id="held" class="paper hidden"></div>
+        </div>
+        <div id="prompts"></div>
+        <div id="world"></div>
+        <div id="ring"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="16" class="bg" /><circle cx="20" cy="20" r="16" class="fg" id="ringFg" /></svg></div>
+        <div id="toasts"></div>
+        <div id="bigtext"></div>
+        <div id="keyhint">Tab card · H hint · M map · Esc pause · / controls</div>
+        <div id="controlsOverlay" class="paper hidden"></div>
+      </div>
+
+      <div id="screen-title" class="screen">
+        <div class="titlewrap">
+          <div class="jp-title">もみじ町のいたずら</div>
+          <h1 class="title">Momiji Mayhem</h1>
+          <div class="subtitle">A monkey. A raccoon. One very tidy little town.</div>
+          <div class="menu">
+            <button data-act="story" class="big">Mischief Card <small>Story · no timer</small></button>
+            <button data-act="rush" class="big">Mayhem Rush <small>5 minutes · endless cards · high score</small></button>
+            <button data-act="daily" class="big">Daily Mischief <small id="dailyLabel">Same challenge for everyone today</small></button>
+            <div class="row">
+              <button data-act="help">How to Play</button>
+              <button data-act="collection">Collection</button>
+              <button data-act="settings">Settings</button>
+            </div>
+          </div>
+          <div id="titleBest"></div>
+        </div>
+        <div class="credit">An homage to <i>Untitled Goose Game</i>. Best with headphones. 🎧</div>
+      </div>
+
+      <div id="screen-select" class="screen">
+        <div class="panel wide">
+          <h2 id="selectTitle">Choose your troublemaker</h2>
+          <div id="charCards"></div>
+          <div id="selectOptions"></div>
+          <div class="row center">
+            <button data-act="back">Back</button>
+            <button data-act="go" class="primary">Let's make trouble!</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="screen-pause" class="screen">
+        <div class="panel">
+          <h2>Paused</h2>
+          <div class="menu">
+            <button data-act="resume" class="primary">Resume</button>
+            <button data-act="help">How to Play</button>
+            <button data-act="settings">Settings</button>
+            <button data-act="restart">Restart Day</button>
+            <button data-act="quit">Quit to Title</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="screen-results" class="screen">
+        <div class="panel">
+          <div id="resultsBody"></div>
+          <div class="row center">
+            <button data-act="again" class="primary">Play Again</button>
+            <button data-act="quit">Title</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="screen-help" class="screen">
+        <div class="panel wide scroll">
+          <h2>How to Play</h2>
+          <div id="helpBody"></div>
+          <div class="row center"><button data-act="close" class="primary">Got it!</button></div>
+        </div>
+      </div>
+
+      <div id="screen-collection" class="screen">
+        <div class="panel wide scroll">
+          <h2>Collection <span class="jp">たからもの</span></h2>
+          <div id="collectionBody"></div>
+          <div class="row center"><button data-act="close" class="primary">Close</button></div>
+        </div>
+      </div>
+
+      <div id="screen-settings" class="screen">
+        <div class="panel">
+          <h2>Settings</h2>
+          <div id="settingsBody"></div>
+          <div class="row center"><button data-act="close" class="primary">Done</button></div>
+        </div>
+      </div>
+
+      <div id="drainMenu" class="modal hidden">
+        <div class="paper">
+          <h3>In the drains... 🦝</h3>
+          <div class="sub">Pick an exit (number keys or click). Esc to pop back out.</div>
+          <div id="drainList"></div>
+        </div>
+      </div>
+
+      <div id="fortune" class="modal hidden">
+        <div class="omikuji">
+          <div class="fk" id="fortuneKanji">吉</div>
+          <div class="fe" id="fortuneEn">Blessing</div>
+          <div class="ft" id="fortuneText"></div>
+          <div class="fclose">(press any key)</div>
+        </div>
+      </div>
+
+      <div id="loading" class="screen show">
+        <div class="titlewrap"><div class="jp-title">もみじ町</div><div class="subtitle">Loading the town...</div></div>
+      </div>
+      <div id="fade"></div>
+    </div>
+    <noscript>This game needs JavaScript.</noscript>
+    <script src="game.js"></script>
+  </body>
+</html>

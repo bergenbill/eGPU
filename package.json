@@ -1,0 +1,15 @@
+{
+  "name": "momiji-mayhem",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Momiji Mayhem - a mischievous monkey & raccoon loose in a small Japanese town. A browser game homage to Untitled Goose Game.",
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --minify --format=iife --target=es2020 --outfile=game.js",
+    "dev": "esbuild src/main.js --bundle --sourcemap --format=iife --target=es2020 --outfile=game.js --watch --servedir=.",
+    "test": "node tests/smoke.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "three": "^0.180.0"
+  }
+}
